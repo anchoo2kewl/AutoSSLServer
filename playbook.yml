@@ -1,0 +1,47 @@
+---
+- hosts: certbot
+  become: true
+  gather_facts: no
+
+  pre_tasks:
+    - raw: apt-get install -y python-simplejson
+
+  tasks:
+    - name: Upgrade system
+      apt: upgrade=dist update_cache=yes
+      force_apt_get: yes
+
+    - name: Install nginx
+      apt: name=nginx state=latest
+
+    - name: Add the repository
+      apt_repository:
+        repo: ppa:certbot/certbot
+        state: present
+
+    - name: install certbot with nginx
+      apt: name=python-certbot-nginx state=latest
+
+    - name: Remove default nginx config
+      file: name=/etc/nginx/sites-enabled/default state=absent
+
+    - name: Install system nginx config
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/{{ domain_name }}
+
+    - name: Apply symlinks in sites-enabled
+      file:
+        dest: /etc/nginx/sites-enabled/{{ domain_name }}
+        src: /etc/nginx/sites-available/{{ domain_name }}
+        state: link
+        force: yes
+
+    - name: Reload nginx to activate certbot site
+      service: name=nginx state=restarted
+
+    - name: Create certbot certificate
+      shell: certbot --nginx -d {{ domain_name }} -d {{ domain_name }} --non-interactive --agree-tos -m {{ certbot_email }}
+
+    - name: Reload nginx to activate specified site
+      service: name=nginx state=restarted
