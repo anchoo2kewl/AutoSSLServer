@@ -9,7 +9,6 @@
   tasks:
     - name: Upgrade system
       apt: upgrade=dist update_cache=yes
-      force_apt_get: yes
 
     - name: Install nginx
       apt: name=nginx state=latest

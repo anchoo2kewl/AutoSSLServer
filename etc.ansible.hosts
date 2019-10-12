@@ -1,2 +1,0 @@
-[certbot]
-example.com ansible_user=root certbot_email=me@example.com domain_name=example.com

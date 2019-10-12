@@ -1,0 +1,80 @@
+---
+- hosts: certbot
+  become: true
+  gather_facts: no
+
+  pre_tasks:
+    - raw: yum install -y python-simplejson
+
+  tasks:
+    - name: upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+        use_backend: dnf
+
+    - name: Add Rule for HTTPS
+      shell: firewall-cmd --zone=public --add-port=443/tcp --permanent
+
+    - name: Add Rule for HTTP
+      shell: firewall-cmd --zone=public --add-port=80/tcp --permanent
+
+    - name: Restart firewalld
+      shell: firewall-cmd --reload
+
+    - name: Install nginx
+      yum: name=nginx state=latest
+
+    - name: Add the repository
+      yum: 
+        name: epel-release
+        state: latest
+
+    - name: install certbot with nginx
+      yum: 
+        name: certbot-nginx
+        state: latest
+
+    - name: Create sites-enabled and sites-available
+      shell: mkdir -p /etc/nginx/sites-available && mkdir -p /etc/nginx/sites-enabled
+
+    - name: Delete last brackett from 
+      shell: sed -i '$ d' /etc/nginx/nginx.conf
+
+    - name: Change Nginx config to consider sites-enabled
+      shell: echo -e '\tinclude /etc/nginx/sites-enabled/*;\n\tserver_names_hash_bucket_size 64;\n}' >> /etc/nginx/nginx.conf
+
+    - name: Reload nginx to activate certbot site
+      service: name=nginx state=restarted  
+    
+    - name: Install system nginx config
+      template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/sites-available/{{ domain_name }}
+
+    - name: Apply symlinks in sites-enabled
+      file:
+        dest: /etc/nginx/sites-enabled/{{ domain_name }}
+        src: /etc/nginx/sites-available/{{ domain_name }}
+        state: link
+        force: yes
+
+    - name: Reload nginx to activate certbot site
+      service: name=nginx state=restarted
+
+    - name: Create certbot certificate
+      shell: certbot --nginx -d {{ domain_name }} -d {{ domain_name }} --non-interactive --agree-tos -m {{ certbot_email }}
+
+    - name: Create folder for website
+      shell: mkdir -p /var/www/{{ domain_name }}/html/
+
+    - name: Copy sample website
+      template:
+        src: templates/index.html
+        dest: /var/www/{{ domain_name }}/html/index.html
+
+    - name: All SE-Linux to work with 
+      shell: certbot --nginx -d {{ domain_name }} -d {{ domain_name }} --non-interactive --agree-tos -m {{ certbot_email }}      
+
+    - name: Reload nginx to activate specified site
+      service: name=nginx state=restarted

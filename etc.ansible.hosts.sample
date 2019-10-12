@@ -1,0 +1,2 @@
+[certbot]
+anshumanbiswas.com ansible_user=root certbot_email=anshuman@anshumanbiswas.com domain_name=anshumanbiswas.com

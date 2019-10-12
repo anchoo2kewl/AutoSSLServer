@@ -10,5 +10,5 @@ To use:
  2. Setup an Ubuntu 16.04 server accessible over ssh
  3. Create `/etc/ansible/hosts` according to template below and change example.com to your domain
  4. Copy the rest of the files to an empty directory (`playbook.yml` in the root of that folder and the rest in the `templates` subfolder)
- 5. Run `ansible-playbook -i /etc/ansible/hosts playbook.yml`
+ 5. Run `ansible-playbook -i /etc/ansible/hosts playbookCentos.yml`
  6. Copy your (static HTML) code to `/var/www/example.com` (`example.com` replaced with your domain)
