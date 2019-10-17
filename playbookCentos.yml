@@ -11,7 +11,7 @@
       yum:
         name: '*'
         state: latest
-        use_backend: dnf
+        use_backend: yum
 
     - name: Add Rule for HTTPS
       shell: firewall-cmd --zone=public --add-port=443/tcp --permanent
@@ -74,7 +74,7 @@
         dest: /var/www/{{ domain_name }}/html/index.html
 
     - name: All SE-Linux to work with 
-      shell: certbot --nginx -d {{ domain_name }} -d {{ domain_name }} --non-interactive --agree-tos -m {{ certbot_email }}      
+      shell: chcon -Rt httpd_sys_content_t /var/www/
 
     - name: Reload nginx to activate specified site
       service: name=nginx state=restarted
